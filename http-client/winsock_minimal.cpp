@@ -11,19 +11,10 @@ int main() {
   WSADATA wsaData;
   ::WSAStartup(0x0202, &wsaData);
 
-  struct addrinfo* ai = nullptr;
-  struct addrinfo hints = {};
-  hints.ai_family = AF_INET;
-  hints.ai_socktype = SOCK_STREAM;
-  int resolve_err = ::getaddrinfo("httpbin.org", "http", &hints, &ai);
-  if (resolve_err != 0)
-    return std::cerr << "resolve error\n", 1;
-  std::unique_ptr<struct addrinfo, decltype(&freeaddrinfo)> ai_holder(ai, &freeaddrinfo);
-
   auto s = ::socket(AF_INET, SOCK_STREAM, IPPROTO_TCP);
-  int connect_err = ::connect(s, ai->ai_addr, ai->ai_addrlen);
-  if (connect_err != 0)
-    return std::cerr << "connect error\n", 1;
+  int connect_ok = WSAConnectByNameW(s, L"httpbin.org", L"http", 0, nullptr, 0, nullptr, nullptr, nullptr);
+  if (!connect_ok)
+    return std::cerr << "connect error " << WSAGetLastError() << '\n', 1;
 
   const std::string_view kRequest = "GET /ip HTTP/1.0\r\n\r\n";
   auto written = ::send(s, kRequest.data(), kRequest.size(), 0);
