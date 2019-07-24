@@ -1,9 +1,8 @@
-// cl /std:c++17 /W4 /EHsc /nologo winapi_sync.cpp && winapi_sync.exe
+// cl /std:c++17 /W4 /EHsc /nologo winsock_sync.cpp && winsock_sync.exe
 
 #include <iostream>
 #include <string>
 #include <string_view>
-#include <vector>
 
 #include <WinSock2.h>
 #include <ws2tcpip.h>
@@ -36,16 +35,13 @@ int main() {
 
   // 3) Connect loop.
   auto s = ::socket(AF_INET, SOCK_STREAM, IPPROTO_TCP);
-  std::vector<char> addr_buf;
   for (;;) {
-    // Copy address and set the port.
-    addr_buf.assign((char*)ai->ai_addr, (char*)ai->ai_addr + ai->ai_addrlen);
-    auto* addr = (sockaddr_in*)addr_buf.data();
+    // Set the port.
+    // Alternatively, we could call `::getaddrinfo(kHost.c_str(), "http", &hints, &ai);`.
+    auto* addr = reinterpret_cast<sockaddr_in*>(ai->ai_addr);
     addr->sin_port = ::htons(kPort);
 
-    // Alternatively, we could call `::getaddrinfo(kHost.c_str(), "http", &hints, &ai);`.
-    // and then `::connect(s, ai->ai_addr, ai->ai_addrlen);`
-    int connect_err = ::connect(s, (sockaddr*)addr, ai->ai_addrlen);
+    int connect_err = ::connect(s, ai->ai_addr, ai->ai_addrlen);
     if (connect_err == 0)
       break;
 
